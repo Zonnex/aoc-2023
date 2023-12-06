@@ -64,7 +64,7 @@ fn p2(input: &Vec<Scratchcard>) -> Solution {
         let wins = check_scratchcard(card);
         total += 1 * repeat;
         for i in 0..wins {
-            repeats[i] += 1*repeat;
+            repeats[i] += 1 * repeat;
         }
     }
 
