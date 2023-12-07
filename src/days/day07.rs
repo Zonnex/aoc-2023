@@ -1,30 +1,42 @@
+use std::cmp::Ordering;
+
 use crate::{Solution, SolutionPair};
 
 pub mod camel_cards;
 
-#[derive(Debug, Eq)]
+#[derive(Debug, Clone)]
 struct Line(camel_cards::Hand, camel_cards::Bid);
 
-impl Ord for Line {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.0.cmp(&self.0)
-    }
-}
 
-impl PartialOrd for Line {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        other.0.partial_cmp(&self.0)
-    }
-}
+struct p1_hand_ranker(pub Line);
 
-impl PartialEq for Line {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
+impl p1_hand_ranker {
+    pub fn rank(&self) -> u8 {
+        let p1_hand_ranker(Line(hand, _)) = self;
+        if hand.five_of_a_kind() {
+            return 6;
+        }
+        if hand.four_of_a_kind() {
+            return 5;
+        }
+        if hand.full_house() {
+            return 4;
+        }
+        if hand.three_of_a_kind() {
+            return 3;
+        }
+        if hand.two_pair() {
+            return 2;
+        }
+        if hand.one_pair() {
+            return 1;
+        }
+        0
     }
 }
 
 pub fn solve(input: &str) -> SolutionPair {
-    let mut lines = input
+    let lines = input
         .lines()
         .map(|line| {
             let (hand, bid) = line.split_once(" ").unwrap();
@@ -34,15 +46,40 @@ pub fn solve(input: &str) -> SolutionPair {
         })
         .collect::<Vec<_>>();
 
-    lines.sort();
-
-    (p1(&lines), p2(input))
+    (p1(p1_sorter(lines.clone())), p2(input))
 }
 
-fn p1(input: &[Line]) -> Solution {
+fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
+    fn compare_cards(left: &[camel_cards::Card], right: &[camel_cards::Card]) -> Ordering {
+        for (l, r) in left.iter().zip(right.iter()) {
+            let card_compare = l.value().cmp(&r.value());
+            if card_compare != Ordering::Equal {
+                return card_compare;
+            }
+        }
+        Ordering::Equal
+    }
+
+    fn compare_hands(Line(left, _): &Line, Line(right, _): &Line) -> Ordering {
+        let rank_compare = left.rank().cmp(&right.rank());
+        if rank_compare == Ordering::Equal {
+            return compare_cards(&left.cards, &right.cards);
+        } else {
+            return rank_compare;
+        }
+    }
+
+    lines.sort_by(compare_hands);
+    lines
+}
+
+fn p2_sorter(lines: Vec<Line>) -> Vec<Line> {
+    todo!()
+}
+
+fn p1(input: Vec<Line>) -> Solution {
     let winnings = input
         .iter()
-        .rev()
         .enumerate()
         .map(|(i, Line(_, camel_cards::Bid(bid)))| {
             let rank = i + 1;

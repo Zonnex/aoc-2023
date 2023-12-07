@@ -12,19 +12,6 @@ pub enum Card {
     T,
     N(u8),
 }
-
-impl PartialOrd for Card {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.value().partial_cmp(&other.value())
-    }
-}
-
-impl Ord for Card {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.value().cmp(&other.value())
-    }
-}
-
 impl Card {
     pub fn from_char(s: char) -> Option<Self> {
         match s {
@@ -54,32 +41,10 @@ impl Card {
     }
 }
 
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone)]
 pub struct Hand {
     pub cards: Vec<Card>,
     card_count: HashMap<Card, u8>,
-}
-
-impl PartialEq for Hand {
-    fn eq(&self, other: &Self) -> bool {
-        self.cards == other.cards
-    }
-}
-
-impl PartialOrd for Hand {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Hand {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        if self.rank() == other.rank() {
-            self.cards.cmp(&other.cards)
-        } else {
-            self.rank().cmp(&other.rank())
-        }
-    }
 }
 
 impl Hand {
@@ -192,14 +157,6 @@ mod hand_tests {
         let hand = Hand::new(vec![Card::A, Card::A, Card::N(2), Card::N(3), Card::N(4)]);
         assert!(hand.one_pair());
     }
-
-    #[test]
-    fn test_sorting() {
-        let a = Hand::parse("AAAA6");
-        let b = Hand::parse("AQAAA");
-
-        assert!(a > b);
-    }
 }
 
 #[cfg(test)]
@@ -210,7 +167,6 @@ mod card_tests {
     fn test_card_sorting() {
         let mut cards = Card::parse("987A645KQJT32");
 
-        cards.sort();
         assert_eq!(
             cards,
             vec![
