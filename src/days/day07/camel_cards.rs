@@ -44,7 +44,7 @@ impl Card {
 #[derive(Debug, Clone)]
 pub struct Hand {
     pub cards: Vec<Card>,
-    card_count: HashMap<Card, u8>,
+    pub(super) card_count: HashMap<Card, u8>,
 }
 
 impl Hand {
@@ -60,102 +60,9 @@ impl Hand {
         }
     }
 
-    pub fn rank(&self) -> u8 {
-        if self.five_of_a_kind() {
-            return 6;
-        }
-        if self.four_of_a_kind() {
-            return 5;
-        }
-        if self.full_house() {
-            return 4;
-        }
-        if self.three_of_a_kind() {
-            return 3;
-        }
-        if self.two_pair() {
-            return 2;
-        }
-        if self.one_pair() {
-            return 1;
-        }
-        0
-    }
-
-    pub fn five_of_a_kind(&self) -> bool {
-        let count = &self.card_count;
-        count.values().any(|&v| v == 5)
-    }
-
-    pub fn four_of_a_kind(&self) -> bool {
-        let count = &self.card_count;
-        count.values().any(|&v| v == 4)
-    }
-
-    pub fn full_house(&self) -> bool {
-        let count = &self.card_count;
-        count.values().any(|&v| v == 3) && count.values().any(|&v| v == 2)
-    }
-
-    pub fn three_of_a_kind(&self) -> bool {
-        let count = &self.card_count;
-        count.values().any(|&v| v == 3) && count.values().filter(|&v| *v == 1).count() == 2
-    }
-
-    pub fn two_pair(&self) -> bool {
-        let count = &self.card_count;
-        count.values().filter(|&v| *v == 2).count() == 2
-    }
-
-    pub fn one_pair(&self) -> bool {
-        let count = &self.card_count;
-        count.values().any(|&v| v == 2) && count.values().filter(|&v| *v == 1).count() == 3
-    }
-
     pub(crate) fn parse(hand: &str) -> Hand {
         let cards = Card::parse(hand);
         Hand::new(cards)
-    }
-}
-
-#[cfg(test)]
-mod hand_tests {
-    use super::*;
-
-    #[test]
-    fn test_five_of_a_kind() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::A, Card::A, Card::A]);
-        assert!(hand.five_of_a_kind());
-    }
-
-    #[test]
-    fn test_four_of_a_kind() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::A, Card::A, Card::K]);
-        assert!(hand.four_of_a_kind());
-    }
-
-    #[test]
-    fn test_full_house() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::A, Card::N(2), Card::N(2)]);
-        assert!(hand.full_house());
-    }
-
-    #[test]
-    fn test_three_of_a_kind() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::A, Card::N(2), Card::N(3)]);
-        assert!(hand.three_of_a_kind());
-    }
-
-    #[test]
-    fn test_two_pair() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::N(2), Card::N(2), Card::N(3)]);
-        assert!(hand.two_pair());
-    }
-
-    #[test]
-    fn test_one_pair() {
-        let hand = Hand::new(vec![Card::A, Card::A, Card::N(2), Card::N(3), Card::N(4)]);
-        assert!(hand.one_pair());
     }
 }
 

@@ -2,17 +2,64 @@ use std::cmp::Ordering;
 
 use crate::{Solution, SolutionPair};
 
+use self::camel_cards::{Card, Hand};
+
 pub mod camel_cards;
 
 #[derive(Debug, Clone)]
 struct Line(camel_cards::Hand, camel_cards::Bid);
 
+struct P1Ranker<'a>(&'a Hand);
 
-struct p1_hand_ranker(pub Line);
+impl<'a> P1Ranker<'a> {
+    pub fn five_of_a_kind(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().any(|&v| v == 5)
+    }
 
-impl p1_hand_ranker {
-    pub fn rank(&self) -> u8 {
-        let p1_hand_ranker(Line(hand, _)) = self;
+    pub fn four_of_a_kind(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().any(|&v| v == 4)
+    }
+
+    pub fn full_house(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().any(|&v| v == 3) && count.values().any(|&v| v == 2)
+    }
+
+    pub fn three_of_a_kind(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().any(|&v| v == 3) && count.values().filter(|&v| *v == 1).count() == 2
+    }
+
+    pub fn two_pair(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().filter(|&v| *v == 2).count() == 2
+    }
+
+    pub fn one_pair(&self) -> bool {
+        let count = &self.0.card_count;
+        count.values().any(|&v| v == 2) && count.values().filter(|&v| *v == 1).count() == 3
+    }
+}
+
+pub fn solve(input: &str) -> SolutionPair {
+    let lines = input
+        .lines()
+        .map(|line| {
+            let (hand, bid) = line.split_once(" ").unwrap();
+            let hand = camel_cards::Hand::parse(hand);
+            let bid = camel_cards::Bid(bid.parse().unwrap());
+            Line(hand, bid)
+        })
+        .collect::<Vec<_>>();
+
+    (p1(p1_sorter(lines.clone())), p2(input))
+}
+
+fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
+    fn rank(hand: &Hand) -> u8 {
+        let hand = P1Ranker(&hand);
         if hand.five_of_a_kind() {
             return 6;
         }
@@ -33,23 +80,7 @@ impl p1_hand_ranker {
         }
         0
     }
-}
 
-pub fn solve(input: &str) -> SolutionPair {
-    let lines = input
-        .lines()
-        .map(|line| {
-            let (hand, bid) = line.split_once(" ").unwrap();
-            let hand = camel_cards::Hand::parse(hand);
-            let bid = camel_cards::Bid(bid.parse().unwrap());
-            Line(hand, bid)
-        })
-        .collect::<Vec<_>>();
-
-    (p1(p1_sorter(lines.clone())), p2(input))
-}
-
-fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
     fn compare_cards(left: &[camel_cards::Card], right: &[camel_cards::Card]) -> Ordering {
         for (l, r) in left.iter().zip(right.iter()) {
             let card_compare = l.value().cmp(&r.value());
@@ -61,7 +92,7 @@ fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
     }
 
     fn compare_hands(Line(left, _): &Line, Line(right, _): &Line) -> Ordering {
-        let rank_compare = left.rank().cmp(&right.rank());
+        let rank_compare = rank(left).cmp(&rank(right));
         if rank_compare == Ordering::Equal {
             return compare_cards(&left.cards, &right.cards);
         } else {
