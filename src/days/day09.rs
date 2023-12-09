@@ -1,20 +1,70 @@
 use crate::{Solution, SolutionPair};
 
-pub fn solve(_input: &str) -> SolutionPair {
-    let sol1: u64 = 0;
-    let sol2: u64 = 0;
+pub fn solve(input: &str) -> SolutionPair {
+    (p1(input), p2(input))
+}
 
-    (Solution::U64(sol1), Solution::U64(sol2))
+fn p1(input: &str) -> Solution {
+    let answer = input
+        .lines()
+        .map(parse_line)
+        .map(|s| compute_next_in_sequence(&s))
+        .sum();
+
+    Solution::ISize(answer)
+}
+
+fn p2(input: &str) -> Solution {
+    let answer = input
+        .lines()
+        .map(parse_line)
+        .map(|s| extrapolate_backwards(&s))
+        .sum();
+
+    Solution::ISize(answer)
+}
+
+fn parse_line(line: &str) -> Vec<isize> {
+    line.split_whitespace()
+        .map(str::parse::<isize>)
+        .filter_map(Result::ok)
+        .collect::<Vec<_>>()
+}
+
+fn compute_next_in_sequence(sequence: &[isize]) -> isize {
+    let last_current = *sequence.last().unwrap();
+    if all_same(&sequence) {
+        return last_current;
+    } else {
+        let diffs = sequence.windows(2).map(|window| window[1] - window[0]).collect::<Vec<_>>();
+        return last_current + compute_next_in_sequence(&diffs);
+    }
+}
+
+fn extrapolate_backwards(sequence: &[isize]) -> isize {
+    let first_current = *sequence.first().unwrap();
+    if all_same(&sequence) {
+        return first_current;
+    } else {
+        let diffs = sequence.windows(2).map(|window| window[1] - window[0]).collect::<Vec<_>>();
+        return first_current - extrapolate_backwards(&diffs);
+    }
+}
+
+fn all_same(diffs: &[isize]) -> bool {
+    let first = diffs.first().unwrap();
+    diffs.iter().all(|&x| x == *first)
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::etc::Solution;
 
     #[test]
     fn test_sample_input() {
         let input = include_str!("../../input/day09/test.txt");
-        let (_p1, _p2) = super::solve(input);
-        // assert_eq!(p1, expected);
-        // assert_eq!(p2, expected);
+        let (p1, p2) = super::solve(input);
+        assert_eq!(p1, Solution::ISize(114));
+        assert_eq!(p2, Solution::ISize(2));
     }
 }
