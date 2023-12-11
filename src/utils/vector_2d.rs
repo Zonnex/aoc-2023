@@ -52,6 +52,13 @@ impl Vector2 {
     pub fn distance_to(&self, other: Vector2) -> usize {
         self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
+
+    pub fn inverse(&self) -> Vector2 {
+        Vector2 {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
 }
 
 impl TryFrom<(usize, usize)> for Vector2 {
