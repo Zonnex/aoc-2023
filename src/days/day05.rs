@@ -62,7 +62,7 @@ fn parse_maps(input: &str) -> Maps {
             _ => unreachable!(),
         };
 
-        for line in map_ranges.split("\n") {
+        for line in map_ranges.split('\n') {
             let mut container = [0; 3];
             line.split_whitespace()
                 .map(str::parse::<usize>)
@@ -97,8 +97,8 @@ fn map_seed_to_location(seed: usize, maps: &Maps) -> usize {
     let light = map_value(water, &maps.water_to_light);
     let temperature = map_value(light, &maps.light_to_temperature);
     let humidity = map_value(temperature, &maps.temperature_to_humidity);
-    let location = map_value(humidity, &maps.humidity_to_location);
-    location
+    
+    map_value(humidity, &maps.humidity_to_location)
 }
 
 fn merge_ranges(ranges: Vec<Range<usize>>) -> Vec<Range<usize>> {
@@ -133,7 +133,7 @@ mod p1 {
 
         let (_, seeds) = first_row.split_once(": ").unwrap();
         let seeds = seeds
-            .split(" ")
+            .split(' ')
             .map(str::parse::<usize>)
             .filter_map(Result::ok)
             .collect::<Vec<_>>();
@@ -155,7 +155,7 @@ mod p1 {
         let elapsed_ms = start.elapsed().as_nanos() as f64 / 1_000_000.0;
         println!("  · Elapsed: {:.4} ms", elapsed_ms);
 
-        Solution::USize(min)
+        Solution::Usize(min)
     }
 }
 
@@ -171,7 +171,7 @@ mod p2 {
 
         let (_, seeds) = first_row.split_once(": ").unwrap();
         let seeds = seeds
-            .split(" ")
+            .split(' ')
             .map(str::parse::<usize>)
             .filter_map(Result::ok)
             .collect::<Vec<_>>();
@@ -193,7 +193,6 @@ mod p2 {
             .into_iter()
             .map(|r| {
                 (r.start..r.end)
-                    .into_iter()
                     .map(|seed| map_seed_to_location(seed, &maps))
                     .min()
                     .unwrap()
@@ -203,7 +202,7 @@ mod p2 {
 
         let elapsed_ms = start.elapsed().as_nanos() as f64 / 1_000_000.0;
         println!("  · Elapsed: {:.4} ms", elapsed_ms);
-        Solution::USize(answer)
+        Solution::Usize(answer)
     }
 }
 
@@ -215,7 +214,7 @@ mod tests {
     fn test_sample_input() {
         let input = include_str!("../../input/day05/test.txt");
         let (p1, p2) = super::solve(input);
-        assert_eq!(p1, Solution::USize(35));
-        assert_eq!(p2, Solution::USize(46));
+        assert_eq!(p1, Solution::Usize(35));
+        assert_eq!(p2, Solution::Usize(46));
     }
 }

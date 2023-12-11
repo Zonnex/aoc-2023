@@ -11,7 +11,7 @@ fn p1(input: &str) -> Solution {
         .map(|s| compute_next_in_sequence(&s))
         .sum();
 
-    Solution::ISize(answer)
+    Solution::Isize(answer)
 }
 
 fn p2(input: &str) -> Solution {
@@ -21,7 +21,7 @@ fn p2(input: &str) -> Solution {
         .map(|s| extrapolate_backwards(&s))
         .sum();
 
-    Solution::ISize(answer)
+    Solution::Isize(answer)
 }
 
 fn parse_line(line: &str) -> Vec<isize> {
@@ -33,21 +33,21 @@ fn parse_line(line: &str) -> Vec<isize> {
 
 fn compute_next_in_sequence(sequence: &[isize]) -> isize {
     let last_current = *sequence.last().unwrap();
-    if all_same(&sequence) {
-        return last_current;
+    if all_same(sequence) {
+        last_current
     } else {
         let diffs = sequence.windows(2).map(|window| window[1] - window[0]).collect::<Vec<_>>();
-        return last_current + compute_next_in_sequence(&diffs);
+        last_current + compute_next_in_sequence(&diffs)
     }
 }
 
 fn extrapolate_backwards(sequence: &[isize]) -> isize {
     let first_current = *sequence.first().unwrap();
-    if all_same(&sequence) {
-        return first_current;
+    if all_same(sequence) {
+        first_current
     } else {
         let diffs = sequence.windows(2).map(|window| window[1] - window[0]).collect::<Vec<_>>();
-        return first_current - extrapolate_backwards(&diffs);
+        first_current - extrapolate_backwards(&diffs)
     }
 }
 
@@ -64,7 +64,7 @@ mod tests {
     fn test_sample_input() {
         let input = include_str!("../../input/day09/test.txt");
         let (p1, p2) = super::solve(input);
-        assert_eq!(p1, Solution::ISize(114));
-        assert_eq!(p2, Solution::ISize(2));
+        assert_eq!(p1, Solution::Isize(114));
+        assert_eq!(p2, Solution::Isize(2));
     }
 }

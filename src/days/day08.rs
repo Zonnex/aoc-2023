@@ -24,25 +24,25 @@ pub(super) fn p1(input: &Input) -> Solution {
             break;
         }
     }
-    Solution::USize(steps)
+    Solution::Usize(steps)
 }
 
 pub(super) fn p2(input: &Input) -> Solution {
     let mut locations = input
         .network_map
         .keys()
-        .filter(|k| k.ends_with("A"))
+        .filter(|k| k.ends_with('A'))
         .map(|k| (*k, 1usize))
         .collect::<VecDeque<_>>();
 
     let mut iterator = input.instructions.iter().cycle();
     let mut path_lengths = Vec::new();
-    while locations.len() > 0 {
+    while !locations.is_empty() {
         let dir = iterator.next().unwrap();
         for _ in 0..locations.len() {
             let (location, steps) = locations.pop_front().unwrap();
             let new = move_to(&input.network_map, location, *dir);
-            if new.ends_with("Z") {
+            if new.ends_with('Z') {
                 path_lengths.push(steps)
             } else {
                 locations.push_back((new, steps + 1));
@@ -50,7 +50,7 @@ pub(super) fn p2(input: &Input) -> Solution {
         }
     }
 
-    Solution::USize(lcm(path_lengths))
+    Solution::Usize(lcm(path_lengths))
 }
 
 fn lcm(mut numbers: Vec<usize>) -> usize {
@@ -112,7 +112,7 @@ mod tests {
         let input_p1 = super::parse_input(input_p1);
         let input_p2 = super::parse_input(input_p2);
         let (p1, p2) = (super::p1(&input_p1), super::p2(&input_p2));
-        assert_eq!(p1, Solution::USize(6));
-        assert_eq!(p2, Solution::USize(6));
+        assert_eq!(p1, Solution::Usize(6));
+        assert_eq!(p2, Solution::Usize(6));
     }
 }

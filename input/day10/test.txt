@@ -1,3 +1,5 @@
-noop
-addx 3
-addx -5
+-L|F7
+7S-7|
+L|7||
+-L-J|
+L|-JF

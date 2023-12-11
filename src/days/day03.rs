@@ -53,7 +53,7 @@ pub fn solve(input: &str) -> SolutionPair {
     let grid = parse_grid(input);
     print_grid(&grid);
 
-    (Solution::USize(p1(&grid)), Solution::USize(p2(&grid)))
+    (Solution::Usize(p1(&grid)), Solution::Usize(p2(&grid)))
 }
 
 fn p1(grid: &Grid) -> usize {
@@ -83,9 +83,7 @@ fn p2(grid: &Grid) -> usize {
         }
     }
 
-    gears
-        .into_iter()
-        .map(|(_, value)| value)
+    gears.into_values()
         .filter(|value| value.len() == 2)
         .map(|gear| gear.into_iter().map(Number::value).product::<usize>())
         .sum()
@@ -183,7 +181,7 @@ mod tests {
         let input = include_str!("../../input/day03/test.txt");
         let (p1, p2) = super::solve(input);
 
-        assert_eq!(p1, Solution::USize(4361));
-        assert_eq!(p2, Solution::USize(467835));
+        assert_eq!(p1, Solution::Usize(4361));
+        assert_eq!(p2, Solution::Usize(467835));
     }
 }

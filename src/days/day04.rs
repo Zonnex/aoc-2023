@@ -32,14 +32,14 @@ fn parse_input(input: &str) -> Vec<Scratchcard> {
         .collect::<Vec<_>>()
 }
 
-fn p1(cards: &Vec<Scratchcard>) -> Solution {
+fn p1(cards: &[Scratchcard]) -> Solution {
     let answer = cards
         .iter()
         .map(check_scratchcard)
         .map(|wins| if wins > 0 { 1 << (wins - 1) } else { 0 })
         .sum();
 
-    Solution::USize(answer)
+    Solution::Usize(answer)
 }
 
 fn check_scratchcard(card: &Scratchcard) -> usize {
@@ -62,13 +62,13 @@ fn p2(input: &Vec<Scratchcard>) -> Solution {
         repeats.rotate_left(1);
 
         let wins = check_scratchcard(card);
-        total += 1 * repeat;
+        total += repeat;
         for i in 0..wins {
-            repeats[i] += 1 * repeat;
+            repeats[i] += repeat;
         }
     }
 
-    Solution::USize(total)
+    Solution::Usize(total)
 }
 
 #[cfg(test)]
@@ -79,7 +79,7 @@ mod tests {
     fn test_sample_input() {
         let input = include_str!("../../input/day04/test.txt");
         let (p1, p2) = super::solve(input);
-        assert_eq!(p1, Solution::USize(13));
-        assert_eq!(p2, Solution::USize(30));
+        assert_eq!(p1, Solution::Usize(13));
+        assert_eq!(p2, Solution::Usize(30));
     }
 }

@@ -28,7 +28,7 @@ pub fn solve(input: &str) -> SolutionPair {
     let re = Regex::new(r"(\d+)\s+(\w+)").unwrap();
     let games = parse_games(input, re);
 
-    (Solution::USize(p1(&games)), Solution::USize(p2(&games)))
+    (Solution::Usize(p1(&games)), Solution::Usize(p2(&games)))
 }
 
 fn parse_games(input: &str, re: Regex) -> Vec<Game> {
@@ -78,7 +78,7 @@ mod tests {
         let input = include_str!("../../input/day02/test.txt");
         let (p1, p2) = super::solve(input);
 
-        assert_eq!(p1, Solution::USize(8));
-        assert_eq!(p2, Solution::USize(2286));
+        assert_eq!(p1, Solution::Usize(8));
+        assert_eq!(p2, Solution::Usize(2286));
     }
 }

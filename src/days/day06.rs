@@ -18,7 +18,7 @@ fn p1(input: &str) -> Solution {
 
     times
         .into_iter()
-        .zip(records.into_iter())
+        .zip(records)
         .map(|(t, d)| f(t, d))
         .product::<usize>()
         .into()
@@ -45,17 +45,17 @@ fn f(t: usize, d: usize) -> usize {
     let diff = ((t / 2.0).powi(2) - d).sqrt();
 
     let root1 = match center - diff {
-        x @ _ if x.fract() == 0.0 => x + 1.0,
+        x if x.fract() == 0.0 => x + 1.0,
         x => x.ceil(),
     } as usize;
 
     let root2 = match center + diff {
-        x @ _ if x.fract() == 0.0 => x - 1.0,
+        x if x.fract() == 0.0 => x - 1.0,
         x => x.floor(),
     } as usize;
     
-    let c1 = root1 as usize;
-    let c2 = root2 as usize;
+    let c1 = root1;
+    let c2 = root2;
     (c1..=c2).count()
 }
 
@@ -67,7 +67,7 @@ mod tests {
     fn test_sample_input() {
         let input = include_str!("../../input/day06/test.txt");
         let (p1, p2) = super::solve(input);
-        assert_eq!(p1, Solution::USize(288));
-        assert_eq!(p2, Solution::USize(71503));
+        assert_eq!(p1, Solution::Usize(288));
+        assert_eq!(p2, Solution::Usize(71503));
     }
 }

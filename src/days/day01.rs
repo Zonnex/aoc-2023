@@ -9,8 +9,8 @@ fn get_digits(line: &str) -> u32 {
 
     let first_digit = chars.next().unwrap();
     let last_digit = chars.last().unwrap_or(first_digit);
-    let res = 10 * first_digit + last_digit;
-    res
+    
+    10 * first_digit + last_digit
 }
 
 fn p1(input: &str) -> Solution {
