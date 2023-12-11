@@ -37,7 +37,7 @@ impl Card {
     }
 
     pub fn parse(s: &str) -> Vec<Self> {
-        s.chars().filter_map(|c| Card::from_char(c)).collect()
+        s.chars().filter_map(Card::from_char).collect()
     }
 }
 
@@ -72,7 +72,7 @@ mod card_tests {
 
     #[test]
     fn test_card_sorting() {
-        let mut cards = Card::parse("987A645KQJT32");
+        let cards = Card::parse("987A645KQJT32");
 
         assert_eq!(
             cards,

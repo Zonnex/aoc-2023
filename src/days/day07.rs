@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::{Solution, SolutionPair};
 
-use self::camel_cards::{Card, Hand};
+use self::camel_cards::{Hand};
 
 pub mod camel_cards;
 
@@ -47,7 +47,7 @@ pub fn solve(input: &str) -> SolutionPair {
     let lines = input
         .lines()
         .map(|line| {
-            let (hand, bid) = line.split_once(" ").unwrap();
+            let (hand, bid) = line.split_once(' ').unwrap();
             let hand = camel_cards::Hand::parse(hand);
             let bid = camel_cards::Bid(bid.parse().unwrap());
             Line(hand, bid)
@@ -59,7 +59,7 @@ pub fn solve(input: &str) -> SolutionPair {
 
 fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
     fn rank(hand: &Hand) -> u8 {
-        let hand = P1Ranker(&hand);
+        let hand = P1Ranker(hand);
         if hand.five_of_a_kind() {
             return 6;
         }
@@ -94,9 +94,9 @@ fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
     fn compare_hands(Line(left, _): &Line, Line(right, _): &Line) -> Ordering {
         let rank_compare = rank(left).cmp(&rank(right));
         if rank_compare == Ordering::Equal {
-            return compare_cards(&left.cards, &right.cards);
+            compare_cards(&left.cards, &right.cards)
         } else {
-            return rank_compare;
+            rank_compare
         }
     }
 
@@ -104,7 +104,7 @@ fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
     lines
 }
 
-fn p2_sorter(lines: Vec<Line>) -> Vec<Line> {
+fn p2_sorter(_lines: Vec<Line>) -> Vec<Line> {
     todo!()
 }
 
@@ -119,10 +119,10 @@ fn p1(input: Vec<Line>) -> Solution {
         })
         .sum::<usize>();
 
-    Solution::USize(winnings)
+    Solution::Usize(winnings)
 }
 
-fn p2(input: &str) -> Solution {
+fn p2(_input: &str) -> Solution {
     Solution::U64(0)
 }
 
@@ -134,7 +134,7 @@ mod tests {
     fn test_sample_input() {
         let input = include_str!("../../input/day07/test.txt");
         let (p1, _p2) = super::solve(input);
-        assert_eq!(p1, Solution::USize(6440));
+        assert_eq!(p1, Solution::Usize(6440));
         // assert_eq!(p2, expected);
     }
 }
