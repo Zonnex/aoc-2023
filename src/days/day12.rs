@@ -11,11 +11,11 @@ impl Input {
         let lines = input
             .lines()
             .map(|line| {
-                let (springs, pattern) = line.split_once(" ").unwrap();
+                let (springs, pattern) = line.split_once(' ').unwrap();
                 let springs = springs.to_owned();
                 let pattern = pattern
                     .split(',')
-                    .filter_map(|s| usize::from_str_radix(s, 10).ok())
+                    .filter_map(|s| s.parse::<usize>().ok())
                     .collect::<Vec<_>>();
                 Line { springs, pattern }
             })
@@ -45,9 +45,9 @@ fn p1(input: &str) -> Solution {
 }
 
 fn count_arrangements(pattern: &str, solution: &[usize]) -> usize {
-    let current = 0;
-    let ranges = initiate_ranges(pattern, solution);
-    for size in solution {}
+    let _current = 0;
+    let _ranges = initiate_ranges(pattern, solution);
+    for _size in solution {}
     // if solution length is 1, this is the last window, count all valid positions to the right
     // if solution length is greater than 1, recurse with smaller solution and substring of remaining pattern
     // after recurse, move to the right until valid, then recurse again
@@ -85,7 +85,7 @@ fn initiate_ranges(pattern: &str, solution: &[usize]) -> Vec<RangeInclusive<usiz
             valid_range = pattern[start..=end].chars().all(|c| c == '?' || c == '#')
                 && pattern.chars().nth(start - 1) != Some('#')
                 && pattern.chars().nth(end + 1) != Some('#');
-                
+
             start += 1;
         }
 
@@ -95,7 +95,7 @@ fn initiate_ranges(pattern: &str, solution: &[usize]) -> Vec<RangeInclusive<usiz
     ranges
 }
 
-fn p2(input: &str) -> Solution {
+fn p2(_input: &str) -> Solution {
     Solution::Usize(0)
 }
 
