@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
+use itertools::Itertools;
+
 use crate::{utils::vector_2d::*, Solution, SolutionPair};
 
 #[derive(Debug)]
@@ -43,17 +45,19 @@ fn parse_map(input: &str) -> Map {
     }
 }
 
-fn p1(map: &Map, start: Vector2) -> (Solution, HashSet<Vector2>) {
+fn p1(map: &Map, start: Vector2) -> (Solution, Vec<Vector2>) {
     let symbol = get_start_symbol(map, start);
     let mut todo = get_exits(symbol)
         .into_iter()
         .map(|d| start + d)
-        .collect::<VecDeque<_>>();
+        .collect::<Vec<_>>();
 
+    let mut pipe = Vec::new();
     let mut visits = HashSet::new();
     visits.insert(start);
+    pipe.push(start);
 
-    while let Some(pos) = todo.pop_front() {
+    while let Some(pos) = todo.pop() {
         let c = match map.tiles.get(&pos) {
             Some(&c) => c,
             None => continue,
@@ -62,15 +66,16 @@ fn p1(map: &Map, start: Vector2) -> (Solution, HashSet<Vector2>) {
         if !visits.insert(pos) {
             continue;
         }
+        pipe.push(pos);
 
         get_exits(c)
             .into_iter()
             .map(|d| pos + d)
             .filter(|x| !visits.contains(x))
-            .for_each(|x| todo.push_back(x));
+            .for_each(|x| todo.push(x));
     }
 
-    (Solution::from(visits.len().div_ceil(2)), visits)
+    (Solution::from(visits.len().div_ceil(2)), pipe)
 }
 
 fn get_start_symbol(map: &Map, start: Vector2) -> u8 {
@@ -98,19 +103,19 @@ fn get_start_symbol(map: &Map, start: Vector2) -> u8 {
     }
 }
 
-fn get_exits(this: u8) -> [Vector2; 2] {
-    match this {
+fn get_exits(shape: u8) -> [Vector2; 2] {
+    match shape {
         b'|' => [N, S],
         b'-' => [W, E],
         b'L' => [N, E],
         b'F' => [S, E],
         b'7' => [W, S],
         b'J' => [W, N],
-        _ => unreachable!("Invalid exit char: {}", this),
+        _ => unreachable!("Invalid exit char: {}", shape),
     }
 }
 
-fn p2(mut map: Map, pipe: HashSet<Vector2>, start: Vector2) -> Solution {
+fn p2(mut map: Map, pipe: Vec<Vector2>, start: Vector2) -> Solution {
     let symbol = get_start_symbol(&map, start);
     map.tiles.iter_mut().for_each(|(pos, c)| {
         if !pipe.contains(pos) {
@@ -121,41 +126,74 @@ fn p2(mut map: Map, pipe: HashSet<Vector2>, start: Vector2) -> Solution {
     map.tiles.remove(&start);
     map.tiles.insert(start, symbol);
 
-    print_map(&map);
+    let mut current = pipe[0];
+    let mut inside = HashSet::new();
+    let mut pipe_iterator = pipe.into_iter().skip(1);
+    while let Some(next) = pipe_iterator.next() {
+        let direction = next - current;
+        let tiles = get_inside_tiles(&map, current, direction)
+            .iter()
+            .map(|&d| current + d)
+            .filter_map(|p| map.tiles.get(&p).map(|&c| (p, c)))
+            .filter(|(p, c)| c == &b'.' && !inside.contains(p))
+            .collect::<Vec<_>>();
 
-    let mut total = 0usize;
-    let (x_max, y_max) = map.size;
-    for row in 0..=y_max {
-        let mut inside = false;
-        for current in 0..=x_max {
-            let next = current + 1;
-            let current_pos = Vector2::new_usize(current, row);
-            let next_pos = Vector2::new_usize(next, row);
-
-            let current_char = map.get(current_pos);
-            let next_char = map.get(next_pos);
-            match (current_char, next_char) {
-                (Some(b'F'), Some(b'J')) => inside = !inside,
-                (Some(b'L'), Some(b'7')) => inside = !inside,
-                (Some(b'|'), _) => inside = !inside,
-                (Some(b'.'), _) => {
-                    if inside {
-                        total += 1
-                    }
-                }
-                _ => continue,
-            }
+        for tile in tiles {
+            floodfill(&map, &mut inside, tile.0);
         }
+        current = next;
     }
 
-    /*
-        Hitta alla delar av loopen och sätt rätt värde på S-pipen (görs i del 1).
-        Byt ut alla bitar som inte är en del av loopen till '.'
-        Ta bort alla '-'
-        Byt ut alla FJ och L7 till '|'
-    */
-    // map.into_iter();
-    Solution::from(total)
+    for inside in inside.iter() {
+        let tile = map.tiles.get_mut(inside).unwrap();
+        *tile = b'0';
+    }
+
+    Solution::from(inside.len())
+}
+
+fn floodfill(map: &Map, inside: &mut HashSet<Vector2>, start: Vector2) {
+    let mut todo = VecDeque::new();
+
+    todo.push_back(start);
+
+    while let Some(pos) = todo.pop_front() {
+        let c = match map.tiles.get(&pos) {
+            Some(&c) => c,
+            None => continue,
+        };
+
+        if c == b'.' && inside.insert(pos) {
+            todo.push_back(pos + N);
+            todo.push_back(pos + E);
+            todo.push_back(pos + S);
+            todo.push_back(pos + W);
+        }
+    }
+}
+
+fn get_inside_tiles(map: &Map, position: Vector2, direction: Vector2) -> Vec<Vector2> {
+    const SW: Vector2 = Vector2 { x: -1, y: -1 };
+    const SE: Vector2 = Vector2 { x: 1, y: -1 };
+    const NW: Vector2 = Vector2 { x: -1, y: 1 };
+    const NE: Vector2 = Vector2 { x: 1, y: 1 };
+
+    let shape = map.tiles.get(&position).unwrap();
+    match (shape, direction) {
+        (b'|', N) => vec![E],
+        (b'|', S) => vec![W],
+        (b'-', W) => vec![N],
+        (b'-', E) => vec![S],
+        (b'L', N) => vec![NE],
+        (b'L', E) => vec![W, SW, S],
+        (b'F', E) => vec![SE],
+        (b'F', S) => vec![W, NW, N],
+        (b'7', S) => vec![SW],
+        (b'7', W) => vec![E, NE, N],
+        (b'J', W) => vec![NW],
+        (b'J', N) => vec![E, SE, S],
+        _ => unreachable!("Invalid exit char: {}", shape),
+    }
 }
 
 fn print_map(map: &Map) {
@@ -185,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_sample_input() {
-        let input = include_str!("../../input/day10/real.txt");
+        let input = include_str!("../../input/day10/test.txt");
         let (p1, p2) = super::solve(input);
         assert_eq!(p1, Solution::Usize(4));
         assert_eq!(p2, Solution::Usize(1));

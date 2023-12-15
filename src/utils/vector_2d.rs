@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::{ops::{Add, AddAssign, Sub, SubAssign}, fmt::Display};
 
 pub const N: Vector2 = Vector2 { x: 0, y: 1 };
 pub const E: Vector2 = Vector2 { x: 1, y: 0 };
@@ -11,6 +11,12 @@ pub const S: Vector2 = Vector2 { x: 0, y: -1 };
 pub struct Vector2 {
     pub x: isize,
     pub y: isize,
+}
+
+impl Display for Vector2 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(x: {}, y: {})", self.x, self.y)
+    }
 }
 
 impl Vector2 {
@@ -57,6 +63,28 @@ impl Vector2 {
         Vector2 {
             x: -self.x,
             y: -self.y,
+        }
+    }
+
+    pub fn right(&self, direction: Vector2) -> Vector2 {
+        let diff = direction - *self;
+        match diff {
+            N => E,
+            E => S,
+            S => W,
+            W => N,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn left(&self, direction: Vector2) -> Vector2 {
+        let diff = direction - *self;
+        match diff {
+            N => W,
+            W => S,
+            S => E,
+            E => N,
+            _ => unreachable!(),
         }
     }
 }
