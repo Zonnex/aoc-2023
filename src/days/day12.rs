@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use crate::{Solution, SolutionPair};
 
-
 type Memo = HashMap<(Vec<u8>, Vec<usize>), usize>;
 
 #[derive(Clone, Debug)]
@@ -47,11 +46,13 @@ impl<'a> Rules<'a> {
         self.solution.is_empty() && self.pattern.iter().any(|&b| b == b'#')
     }
     fn pattern_does_not_have_enough_candidates(&self) -> bool {
-        self.pattern
+        let candidates = self
+            .pattern
             .iter()
             .filter(|&&b| b == b'#' || b == b'?')
-            .count()
-            < self.solution.iter().sum::<usize>()
+            .count();
+
+        candidates < self.solution.iter().sum::<usize>()
     }
 
     fn invalid(&self) -> bool {
@@ -65,10 +66,9 @@ impl<'a> Rules<'a> {
             return true;
         }
 
-        return false;
+        false
     }
 }
-
 
 pub fn solve(input: &str) -> SolutionPair {
     let input = Input::parse(input);
@@ -154,8 +154,6 @@ fn count_arrangements(pattern: &mut [u8], solution: &mut [usize], memo: &mut Mem
         _ => unreachable!("Invalid input"),
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
