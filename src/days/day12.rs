@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn test_pattern_1() {
         let mut pattern = "???.###".bytes().collect::<Vec<_>>().repeat(5);
-        let mut solution = vec![1, 1, 3].repeat(5);
+        let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),
@@ -185,7 +185,7 @@ mod tests {
     #[test]
     fn test_pattern_2() {
         let mut pattern = ".??..??...?##.".bytes().collect::<Vec<_>>();
-        let mut solution = vec![1, 1, 3].repeat(5);
+        let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),
@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn test_pattern_3() {
         let mut pattern = "?#?#?#?#?#?#?#?".bytes().collect::<Vec<_>>().repeat(5);
-        let mut solution = vec![1, 3, 1, 6].repeat(5);
+        let mut solution = [1, 3, 1, 6].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),
@@ -207,7 +207,7 @@ mod tests {
     #[test]
     fn test_pattern_4() {
         let mut pattern = "????.#...#...".bytes().collect::<Vec<_>>().repeat(5);
-        let mut solution = vec![4, 1, 1].repeat(5);
+        let mut solution = [4, 1, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),
@@ -218,7 +218,7 @@ mod tests {
     #[test]
     fn test_pattern_5() {
         let mut pattern = "????.######..#####.".bytes().collect::<Vec<_>>().repeat(5);
-        let mut solution = vec![1, 6, 5].repeat(5);
+        let mut solution = [1, 6, 5].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),
@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn test_pattern_6() {
         let mut pattern = "?###????????".bytes().collect::<Vec<_>>().repeat(5);
-        let mut solution = vec![3, 2, 1].repeat(5);
+        let mut solution = [3, 2, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
             super::count_arrangements(&mut pattern, &mut solution, &mut memo),

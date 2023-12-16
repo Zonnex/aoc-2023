@@ -3,9 +3,13 @@
 use std::{ops::{Add, AddAssign, Sub, SubAssign}, fmt::Display};
 
 pub const N: Vector2 = Vector2 { x: 0, y: 1 };
+pub const NE: Vector2 = Vector2 { x: 1, y: 1 };
 pub const E: Vector2 = Vector2 { x: 1, y: 0 };
 pub const W: Vector2 = Vector2 { x: -1, y: 0 };
 pub const S: Vector2 = Vector2 { x: 0, y: -1 };
+pub const SW: Vector2 = Vector2 { x: -1, y: -1 };
+pub const SE: Vector2 = Vector2 { x: 1, y: -1 };
+pub const NW: Vector2 = Vector2 { x: -1, y: 1 };
 
 #[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vector2 {
@@ -86,6 +90,22 @@ impl Vector2 {
             E => N,
             _ => unreachable!(),
         }
+    }
+
+    pub fn north(&self) -> Vector2 {
+        *self + N
+    }
+
+    pub fn east(&self) -> Vector2 {
+        *self + E
+    }
+
+    pub fn south(&self) -> Vector2 {
+        *self + S
+    }
+
+    pub fn west(&self) -> Vector2 {
+        *self + W
     }
 }
 

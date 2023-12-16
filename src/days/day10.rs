@@ -1,13 +1,10 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use itertools::Itertools;
-
 use crate::{utils::vector_2d::*, Solution, SolutionPair};
 
 #[derive(Debug)]
 pub(crate) struct Map {
     tiles: HashMap<Vector2, u8>,
-    size: (usize, usize),
 }
 impl Map {
     fn get(&self, position: Vector2) -> Option<&u8> {
@@ -31,18 +28,15 @@ pub fn solve(input: &str) -> SolutionPair {
 }
 
 fn parse_map(input: &str) -> Map {
-    let mut map = HashMap::new();
+    let mut tiles = HashMap::new();
     for (y, line) in input.lines().rev().enumerate() {
         for (x, c) in line.bytes().enumerate() {
-            map.insert(Vector2::new_usize(x, y), c);
+            tiles.insert(Vector2::new_usize(x, y), c);
         }
     }
     let max_x = input.lines().next().unwrap().len() - 1;
     let max_y = input.lines().count() - 1;
-    Map {
-        tiles: map,
-        size: (max_x, max_y),
-    }
+    Map { tiles }
 }
 
 fn p1(map: &Map, start: Vector2) -> (Solution, Vec<Vector2>) {
@@ -128,8 +122,7 @@ fn p2(mut map: Map, pipe: Vec<Vector2>, start: Vector2) -> Solution {
 
     let mut current = pipe[0];
     let mut inside = HashSet::new();
-    let mut pipe_iterator = pipe.into_iter().skip(1);
-    while let Some(next) = pipe_iterator.next() {
+    for next in pipe.into_iter().skip(1) {
         let direction = next - current;
         let tiles = get_inside_tiles(&map, current, direction)
             .iter()
@@ -154,30 +147,20 @@ fn p2(mut map: Map, pipe: Vec<Vector2>, start: Vector2) -> Solution {
 
 fn floodfill(map: &Map, inside: &mut HashSet<Vector2>, start: Vector2) {
     let mut todo = VecDeque::new();
-
     todo.push_back(start);
 
     while let Some(pos) = todo.pop_front() {
-        let c = match map.tiles.get(&pos) {
-            Some(&c) => c,
-            None => continue,
-        };
-
-        if c == b'.' && inside.insert(pos) {
-            todo.push_back(pos + N);
-            todo.push_back(pos + E);
-            todo.push_back(pos + S);
-            todo.push_back(pos + W);
-        }
+        map.tiles.get(&pos).map(|&c| {
+            if c == b'.' && inside.insert(pos) {
+                pos.adjacent_points()
+                    .iter()
+                    .for_each(|&p| todo.push_back(p));
+            }
+        });
     }
 }
 
 fn get_inside_tiles(map: &Map, position: Vector2, direction: Vector2) -> Vec<Vector2> {
-    const SW: Vector2 = Vector2 { x: -1, y: -1 };
-    const SE: Vector2 = Vector2 { x: 1, y: -1 };
-    const NW: Vector2 = Vector2 { x: -1, y: 1 };
-    const NE: Vector2 = Vector2 { x: 1, y: 1 };
-
     let shape = map.tiles.get(&position).unwrap();
     match (shape, direction) {
         (b'|', N) => vec![E],
@@ -193,27 +176,6 @@ fn get_inside_tiles(map: &Map, position: Vector2, direction: Vector2) -> Vec<Vec
         (b'J', W) => vec![NW],
         (b'J', N) => vec![E, SE, S],
         _ => unreachable!("Invalid exit char: {}", shape),
-    }
-}
-
-fn print_map(map: &Map) {
-    let (max_x, max_y) = map.size;
-    for row in (0..=max_y).rev() {
-        for column in 0..=max_x {
-            let pos = Vector2::new_usize(column, row);
-            let c = map.tiles.get(&pos).unwrap();
-            let c = match c {
-                b'F' => '╔',
-                b'L' => '╚',
-                b'7' => '╗',
-                b'|' => '║',
-                b'J' => '╝',
-                b'-' => '═',
-                _ => *c as char,
-            };
-            print!("{}", c);
-        }
-        println!()
     }
 }
 
