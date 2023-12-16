@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use std::{ops::{Add, AddAssign, Sub, SubAssign}, fmt::Display};
+use std::{
+    fmt::Display,
+    ops::{Add, AddAssign, Sub, SubAssign},
+};
 
 pub const N: Vector2 = Vector2 { x: 0, y: 1 };
 pub const NE: Vector2 = Vector2 { x: 1, y: 1 };
