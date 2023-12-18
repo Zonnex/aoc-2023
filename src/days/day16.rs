@@ -117,7 +117,7 @@ fn move_light(map: &Map, light: Light) -> Vec<Light> {
     let shape = map.grid.get(&light.position);
 
     match shape {
-        None => return vec![],
+        None => vec![],
         Some(shape) => match light.direction {
             E => move_east(shape, light),
             W => move_west(shape, light),

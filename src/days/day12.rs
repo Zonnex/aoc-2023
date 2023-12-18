@@ -74,35 +74,15 @@ impl<'a> Rules<'a> {
 
     fn invalid(&self) -> bool {
         if self.pattern_too_short() {
-            println!(
-                "[PATTERN TOO SHORT] pattern: {:?}, solution: {:?}",
-                pattern_collect(self.pattern),
-                self.solution
-            );
             return true;
         }
         if self.pattern_is_empty_but_solution_is_not() {
-            println!(
-                "[NOT COMPLETE] pattern: {:?}, solution: {:?}",
-                pattern_collect(self.pattern),
-                self.solution
-            );
             return true;
         }
         if self.solution_is_empty_but_pattern_contains_hash() {
-            println!(
-                "[PARTS REMAIN] pattern: {:?}, solution: {:?}",
-                pattern_collect(self.pattern),
-                self.solution
-            );
             return true;
         }
         if self.pattern_does_not_have_enough_candidates() {
-            println!(
-                "[TOO FEW CANDIDATES] pattern: {:?}, solution: {:?}",
-                pattern_collect(self.pattern),
-                self.solution
-            );
             return true;
         }
 
@@ -134,13 +114,9 @@ fn p2(input: &str) -> Solution {
     let total_arrangements = input
         .lines
         .iter_mut()
-        .inspect(|l| print!("pattern: {:?} -> ", pattern_collect(&l.springs)))
         .map(|l| {
             let mut memo = Memo::new();
             count_arrangements(&mut l.springs, &mut l.pattern, &mut memo)
-        })
-        .inspect(|l| {
-            println!("{}", l);
         })
         .sum::<usize>();
 
@@ -189,36 +165,14 @@ fn count_arrangements(pattern: &mut [u8], solution: &mut [usize], memo: &mut Mem
         }
     }
 
-    match pattern.first() {
-        Some(&b'#') => {
-            let res = pound(pattern, solution, memo);
-            memo.insert(key, res);
-            res
-        }
-        Some(&b'.') => {
-            let res = dot(pattern, solution, memo);
-            memo.insert(key, res);
-            res
-        }
-        Some(&b'?') => {
-            let dot_solutions = dot(pattern, solution, memo);
-            let pound_solutions = pound(pattern, solution, memo);
-            dot_solutions + pound_solutions
-        }
+    let res = match pattern.first() {
+        Some(&b'#') => pound(pattern, solution, memo),
+        Some(&b'.') => dot(pattern, solution, memo),
+        Some(&b'?') => pound(pattern, solution, memo) + dot(pattern, solution, memo),
         _ => unreachable!("Invalid input"),
-    }
-}
-
-fn pattern_collect(pattern: &[u8]) -> String {
-    pattern
-        .iter()
-        .map(|&b| match b {
-            b'#' => '#',
-            b'.' => '.',
-            b'?' => '?',
-            _ => unreachable!("Invalid input"),
-        })
-        .collect::<String>()
+    };
+    memo.insert(key, res);
+    res
 }
 
 #[cfg(test)]
@@ -232,7 +186,11 @@ mod tests {
 
     #[test]
     fn test_pattern_1() {
-        let mut pattern = std::iter::repeat("???.###").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("???.###")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -243,7 +201,11 @@ mod tests {
 
     #[test]
     fn test_pattern_2() {
-        let mut pattern = std::iter::repeat("???.###").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("???.###")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -254,7 +216,11 @@ mod tests {
 
     #[test]
     fn test_pattern_3() {
-        let mut pattern = std::iter::repeat("?#?#?#?#?#?#?#?").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("?#?#?#?#?#?#?#?")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [1, 3, 1, 6].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -265,7 +231,11 @@ mod tests {
 
     #[test]
     fn test_pattern_4() {
-        let mut pattern = std::iter::repeat("????.#...#...").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("????.#...#...")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [4, 1, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -276,7 +246,11 @@ mod tests {
 
     #[test]
     fn test_pattern_5() {
-        let mut pattern = std::iter::repeat("????.######..#####.").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("????.######..#####.")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [1, 6, 5].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -287,7 +261,11 @@ mod tests {
 
     #[test]
     fn test_pattern_6() {
-        let mut pattern = std::iter::repeat("?###????????").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("?###????????")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
         let mut solution = [3, 2, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -298,8 +276,12 @@ mod tests {
 
     #[test]
     fn test_pattern_7() {
-        let mut pattern = std::iter::repeat("???#??????????????").take(5).join("?").bytes().collect::<Vec<_>>();
-        let mut solution = [1,2,1,4,1].repeat(5);
+        let mut pattern = std::iter::repeat("???#??????????????")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
+        let mut solution = [1, 2, 1, 4, 1].repeat(5);
         let mut memo = Memo::new();
         let res = super::count_arrangements(&mut pattern, &mut solution, &mut memo);
         println!("{}", res);
@@ -307,8 +289,12 @@ mod tests {
 
     #[test]
     fn test_pattern_8() {
-        let mut pattern = std::iter::repeat("???#???##.#?").take(5).join("?").bytes().collect::<Vec<_>>();
-        let mut solution = [5,2,2].repeat(5);
+        let mut pattern = std::iter::repeat("???#???##.#?")
+            .take(5)
+            .join("?")
+            .bytes()
+            .collect::<Vec<_>>();
+        let mut solution = [5, 2, 2].repeat(5);
         let mut memo = Memo::new();
         let res = super::count_arrangements(&mut pattern, &mut solution, &mut memo);
         println!("{}", res);

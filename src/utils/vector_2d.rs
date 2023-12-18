@@ -114,7 +114,7 @@ impl Vector2 {
     }
 
     pub(crate) fn magnitude(&self) -> usize {
-        self.x.unsigned_abs().max(self.y.unsigned_abs()) as usize
+        self.x.unsigned_abs().max(self.y.unsigned_abs())
     }
 }
 

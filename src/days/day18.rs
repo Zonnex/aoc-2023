@@ -12,7 +12,7 @@ impl Instruction {
         input
             .lines()
             .map(|line| {
-                let parts = line.split(" ").collect::<Vec<_>>();
+                let parts = line.split(' ').collect::<Vec<_>>();
 
                 match parts.as_slice() {
                     [dir, steps, color] => {
@@ -20,11 +20,11 @@ impl Instruction {
                         Self {
                             steps: steps.parse::<usize>().unwrap(),
                             color: color.to_string(),
-                            dir: match dir {
-                                &"U" => N,
-                                &"D" => S,
-                                &"L" => W,
-                                &"R" => E,
+                            dir: match *dir {
+                                "U" => N,
+                                "D" => S,
+                                "L" => W,
+                                "R" => E,
                                 _ => unreachable!("Invalid direction"),
                             },
                         }
@@ -97,7 +97,7 @@ fn area(polygon: &[Vector2]) -> usize {
         .map(|(&a, &b)| a.y * b.x)
         .sum::<isize>();
 
-    (s1 - s2).abs() as usize
+    (s1 - s2).unsigned_abs()
 }
 
 fn border(polygon: &[Vector2]) -> usize {

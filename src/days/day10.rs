@@ -34,8 +34,8 @@ fn parse_map(input: &str) -> Map {
             tiles.insert(Vector2::new_usize(x, y), c);
         }
     }
-    let max_x = input.lines().next().unwrap().len() - 1;
-    let max_y = input.lines().count() - 1;
+    let _max_x = input.lines().next().unwrap().len() - 1;
+    let _max_y = input.lines().count() - 1;
     Map { tiles }
 }
 
@@ -150,13 +150,13 @@ fn floodfill(map: &Map, inside: &mut HashSet<Vector2>, start: Vector2) {
     todo.push_back(start);
 
     while let Some(pos) = todo.pop_front() {
-        map.tiles.get(&pos).map(|&c| {
+        if let Some(&c) = map.tiles.get(&pos) {
             if c == b'.' && inside.insert(pos) {
                 pos.adjacent_points()
                     .iter()
                     .for_each(|&p| todo.push_back(p));
             }
-        });
+        }
     }
 }
 
