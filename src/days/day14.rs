@@ -18,16 +18,6 @@ impl Map {
         Self { tiles }
     }
 
-    fn print(&self) {
-        for line in self.tiles.iter().rev() {
-            for c in line.iter() {
-                print!("{}", *c as char);
-            }
-            println!();
-        }
-        println!();
-    }
-
     fn tilt_up(&mut self) {
         let width = self.tiles[0].len();
         let height = self.tiles.len();

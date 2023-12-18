@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::{Solution, SolutionPair};
 
-use self::camel_cards::{Hand};
+use self::camel_cards::Hand;
 
 pub mod camel_cards;
 

@@ -63,8 +63,8 @@ fn p2(input: &Vec<Scratchcard>) -> Solution {
 
         let wins = check_scratchcard(card);
         total += repeat;
-        for i in 0..wins {
-            repeats[i] += repeat;
+        for item in repeats.iter_mut().take(wins) {
+            *item += repeat;
         }
     }
 
