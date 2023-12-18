@@ -74,25 +74,27 @@ impl Vector2 {
     }
 
     pub fn right(&self, direction: Vector2) -> Vector2 {
-        let diff = direction - *self;
-        match diff {
+        let dir = match direction {
             N => E,
             E => S,
             S => W,
             W => N,
             _ => unreachable!(),
-        }
+        };
+
+        *self + dir
     }
 
     pub fn left(&self, direction: Vector2) -> Vector2 {
-        let diff = direction - *self;
-        match diff {
+        let dir = match direction {
             N => W,
-            W => S,
-            S => E,
             E => N,
+            S => E,
+            W => S,
             _ => unreachable!(),
-        }
+        };
+
+        *self + dir
     }
 
     pub fn north(&self) -> Vector2 {

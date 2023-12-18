@@ -10,16 +10,24 @@ struct Input {
 }
 
 impl Input {
-    fn parse(input: &str) -> Self {
+    fn parse(input: &str, repeats: usize) -> Self {
         let lines = input
             .lines()
             .map(|line| {
                 let (springs, pattern) = line.split_once(' ').unwrap();
-                let springs = springs.bytes().collect::<Vec<_>>();
+                let springs = std::iter::repeat(springs)
+                    .take(repeats)
+                    .collect::<Vec<_>>()
+                    .join("?")
+                    .bytes()
+                    .collect::<Vec<_>>();
+
                 let pattern = pattern
                     .split(',')
                     .filter_map(|s| s.parse::<usize>().ok())
-                    .collect::<Vec<_>>();
+                    .collect::<Vec<_>>()
+                    .repeat(repeats);
+
                 Line { springs, pattern }
             })
             .collect();
@@ -55,14 +63,46 @@ impl<'a> Rules<'a> {
         candidates < self.solution.iter().sum::<usize>()
     }
 
+    fn pattern_too_short(&self) -> bool {
+        if self.solution.len() > 1 {
+            let min_length = self.solution.iter().sum::<usize>() + self.solution.len() - 1;
+            self.pattern.len() < min_length
+        } else {
+            false
+        }
+    }
+
     fn invalid(&self) -> bool {
+        if self.pattern_too_short() {
+            println!(
+                "[PATTERN TOO SHORT] pattern: {:?}, solution: {:?}",
+                pattern_collect(self.pattern),
+                self.solution
+            );
+            return true;
+        }
         if self.pattern_is_empty_but_solution_is_not() {
+            println!(
+                "[NOT COMPLETE] pattern: {:?}, solution: {:?}",
+                pattern_collect(self.pattern),
+                self.solution
+            );
             return true;
         }
         if self.solution_is_empty_but_pattern_contains_hash() {
+            println!(
+                "[PARTS REMAIN] pattern: {:?}, solution: {:?}",
+                pattern_collect(self.pattern),
+                self.solution
+            );
             return true;
         }
         if self.pattern_does_not_have_enough_candidates() {
+            println!(
+                "[TOO FEW CANDIDATES] pattern: {:?}, solution: {:?}",
+                pattern_collect(self.pattern),
+                self.solution
+            );
             return true;
         }
 
@@ -71,11 +111,11 @@ impl<'a> Rules<'a> {
 }
 
 pub fn solve(input: &str) -> SolutionPair {
-    let input = Input::parse(input);
-    (p1(input.clone()), p2(input))
+    (p1(input), p2(input))
 }
 
-fn p1(mut input: Input) -> Solution {
+fn p1(input: &str) -> Solution {
+    let mut input = Input::parse(input, 1);
     let total_arrangements = input
         .lines
         .iter_mut()
@@ -87,20 +127,21 @@ fn p1(mut input: Input) -> Solution {
 
     Solution::Usize(total_arrangements)
 }
-fn p2(mut input: Input) -> Solution {
-    input.lines.iter_mut().for_each(|l| {
-        l.springs = l.springs.repeat(5);
-        l.pattern = l.pattern.repeat(5);
-    });
+
+fn p2(input: &str) -> Solution {
+    let mut input = Input::parse(input, 5);
 
     let total_arrangements = input
         .lines
         .iter_mut()
+        .inspect(|l| print!("pattern: {:?} -> ", pattern_collect(&l.springs)))
         .map(|l| {
             let mut memo = Memo::new();
             count_arrangements(&mut l.springs, &mut l.pattern, &mut memo)
         })
-        .inspect(|f| println!("{}", f))
+        .inspect(|l| {
+            println!("{}", l);
+        })
         .sum::<usize>();
 
     Solution::Usize(total_arrangements)
@@ -159,21 +200,39 @@ fn count_arrangements(pattern: &mut [u8], solution: &mut [usize], memo: &mut Mem
             memo.insert(key, res);
             res
         }
-        Some(&b'?') => dot(pattern, solution, memo) + pound(pattern, solution, memo),
+        Some(&b'?') => {
+            let dot_solutions = dot(pattern, solution, memo);
+            let pound_solutions = pound(pattern, solution, memo);
+            dot_solutions + pound_solutions
+        }
         _ => unreachable!("Invalid input"),
     }
+}
+
+fn pattern_collect(pattern: &[u8]) -> String {
+    pattern
+        .iter()
+        .map(|&b| match b {
+            b'#' => '#',
+            b'.' => '.',
+            b'?' => '?',
+            _ => unreachable!("Invalid input"),
+        })
+        .collect::<String>()
 }
 
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
+    use itertools::Itertools;
+
     use crate::etc::Solution;
     type Memo = HashMap<(Vec<u8>, Vec<usize>), usize>;
 
     #[test]
     fn test_pattern_1() {
-        let mut pattern = "???.###".bytes().collect::<Vec<_>>().repeat(5);
+        let mut pattern = std::iter::repeat("???.###").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -184,7 +243,7 @@ mod tests {
 
     #[test]
     fn test_pattern_2() {
-        let mut pattern = ".??..??...?##.".bytes().collect::<Vec<_>>();
+        let mut pattern = std::iter::repeat("???.###").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [1, 1, 3].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -195,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_pattern_3() {
-        let mut pattern = "?#?#?#?#?#?#?#?".bytes().collect::<Vec<_>>().repeat(5);
+        let mut pattern = std::iter::repeat("?#?#?#?#?#?#?#?").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [1, 3, 1, 6].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -206,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_pattern_4() {
-        let mut pattern = "????.#...#...".bytes().collect::<Vec<_>>().repeat(5);
+        let mut pattern = std::iter::repeat("????.#...#...").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [4, 1, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -217,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_pattern_5() {
-        let mut pattern = "????.######..#####.".bytes().collect::<Vec<_>>().repeat(5);
+        let mut pattern = std::iter::repeat("????.######..#####.").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [1, 6, 5].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -228,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_pattern_6() {
-        let mut pattern = "?###????????".bytes().collect::<Vec<_>>().repeat(5);
+        let mut pattern = std::iter::repeat("?###????????").take(5).join("?").bytes().collect::<Vec<_>>();
         let mut solution = [3, 2, 1].repeat(5);
         let mut memo = Memo::new();
         assert_eq!(
@@ -237,7 +296,25 @@ mod tests {
         );
     }
 
-    // #[test]
+    #[test]
+    fn test_pattern_7() {
+        let mut pattern = std::iter::repeat("???#??????????????").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut solution = [1,2,1,4,1].repeat(5);
+        let mut memo = Memo::new();
+        let res = super::count_arrangements(&mut pattern, &mut solution, &mut memo);
+        println!("{}", res);
+    }
+
+    #[test]
+    fn test_pattern_8() {
+        let mut pattern = std::iter::repeat("???#???##.#?").take(5).join("?").bytes().collect::<Vec<_>>();
+        let mut solution = [5,2,2].repeat(5);
+        let mut memo = Memo::new();
+        let res = super::count_arrangements(&mut pattern, &mut solution, &mut memo);
+        println!("{}", res);
+    }
+
+    #[test]
     fn test_sample_input() {
         let input = include_str!("../../input/day12/test.txt");
         let (p1, p2) = super::solve(input);
