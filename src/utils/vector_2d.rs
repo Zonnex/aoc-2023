@@ -112,6 +112,10 @@ impl Vector2 {
     pub fn west(&self) -> Vector2 {
         *self + W
     }
+
+    pub(crate) fn magnitude(&self) -> usize {
+        self.x.unsigned_abs().max(self.y.unsigned_abs()) as usize
+    }
 }
 
 impl TryFrom<(usize, usize)> for Vector2 {
