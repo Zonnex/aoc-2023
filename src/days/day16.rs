@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, fmt::Display};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Display,
+};
 
 use crate::{utils::vector_2d::*, Solution, SolutionPair};
 
@@ -24,9 +27,10 @@ impl Map {
                 y = y.max(pos.y);
             })
             .collect();
+
         Self {
             grid,
-            size: Vector2::new(x, y)
+            size: Vector2::new(x, y),
         }
     }
 }
@@ -45,7 +49,7 @@ impl Display for Light {
 
 pub fn solve(input: &str) -> SolutionPair {
     let map = Map::parse(input);
-    
+
     (p1(&map), p2(&map))
 }
 
@@ -65,7 +69,7 @@ fn reflect(map: &Map, light: Light) -> usize {
     while let Some(light) = lights.pop() {
         let new_lights = move_light(map, light);
         for light in new_lights {
-            if map.grid.contains_key(&light.position) && visits.insert(light){
+            if map.grid.contains_key(&light.position) && visits.insert(light) {
                 lights.push(light)
             }
         }
@@ -108,7 +112,6 @@ fn p2(map: &Map) -> Solution {
         };
         results.push(reflect(map, light));
     }
-    
 
     Solution::Usize(results.into_iter().max().unwrap())
 }
