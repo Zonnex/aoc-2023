@@ -66,14 +66,14 @@ impl Vector2 {
         self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
     }
 
-    pub fn inverse(&self) -> Vector2 {
+    pub fn inverse(&self) -> Self {
         Vector2 {
             x: -self.x,
             y: -self.y,
         }
     }
 
-    pub fn right(&self, direction: Vector2) -> Vector2 {
+    pub fn right(&self, direction: Vector2) -> Self {
         let dir = match direction {
             N => E,
             E => S,
@@ -85,7 +85,7 @@ impl Vector2 {
         *self + dir
     }
 
-    pub fn left(&self, direction: Vector2) -> Vector2 {
+    pub fn left(&self, direction: Vector2) -> Self {
         let dir = match direction {
             N => W,
             E => N,
@@ -115,6 +115,12 @@ impl Vector2 {
 
     pub(crate) fn magnitude(&self) -> usize {
         self.x.unsigned_abs().max(self.y.unsigned_abs())
+    }
+
+    pub(crate) fn wrap(&self, max_x: usize, max_y: usize) -> Vector2 {
+        let x = self.x.rem_euclid(max_x as isize);
+        let y = self.y.rem_euclid(max_y as isize);
+        Vector2 { x, y }
     }
 }
 
