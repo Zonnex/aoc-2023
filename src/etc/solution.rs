@@ -3,6 +3,7 @@ use Solution::*;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Solution {
+    None,
     I8(i8),
     I16(i16),
     I32(i32),
@@ -34,6 +35,7 @@ impl Display for Solution {
             U128(x) => x.fmt(f),
             Usize(x) => x.fmt(f),
             Str(x) => x.fmt(f),
+            None => write!(f, "None")
         }
     }
 }
