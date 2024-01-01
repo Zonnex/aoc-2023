@@ -14,6 +14,14 @@ impl Vector3 {
         Vector3 { x, y, z }
     }
 
+    pub const fn new_usize(x: usize, y: usize, z: usize) -> Self {
+        Vector3 {
+            x: x as isize,
+            y: y as isize,
+            z: z as isize,
+        }
+    }
+
     pub fn adjacent_points(&self) -> [Vector3; 6] {
         [
             (-1, 0, 0),
