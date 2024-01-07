@@ -1,4 +1,88 @@
-use crate::{utils::vector_2d::Vector2, Solution, SolutionPair};
+use crate::{Solution, SolutionPair};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Vector3 {
+    x: i128,
+    y: i128,
+    z: i128,
+}
+
+impl Vector3 {
+    fn cross(self, other: Self) -> Self {
+        Vector3 {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+    // Changes the magnitude (but not direction) of the vector.
+    // Prevents numeric overflow.
+    fn gcd(self) -> Self {
+        let gcd = gcd(self.x.abs(), gcd(self.y.abs(), self.z.abs()));
+        Vector3 {
+            x: self.x / gcd,
+            y: self.y / gcd,
+            z: self.z / gcd,
+        }
+    }
+
+    fn sum(self) -> i128 {
+        self.x + self.y + self.z
+    }
+}
+
+fn gcd(abs_1: i128, abs_2: i128) -> i128 {
+    if abs_1 == 0 {
+        abs_2
+    } else if abs_2 == 0 {
+        abs_1
+    } else {
+        let mut a = abs_1;
+        let mut b = abs_2;
+        while b != 0 {
+            let t = b;
+            b = a % b;
+            a = t;
+        }
+        a
+    }
+}
+
+impl std::ops::Mul<i128> for Vector3 {
+    type Output = Self;
+
+    fn mul(self, rhs: i128) -> Self::Output {
+        Vector3 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
+    }
+}
+
+impl std::ops::Add for Vector3 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Vector3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl std::ops::Sub for Vector3 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Vector3 {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct Point(f64, f64);
@@ -9,10 +93,10 @@ enum Intersects {
     Future,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Hail {
-    position: Vector2,
-    velocity: Vector2,
+    position: Vector3,
+    velocity: Vector3,
 }
 
 impl Hail {
@@ -33,9 +117,17 @@ impl Hail {
             .collect::<Vec<_>>();
 
         match (p.as_slice(), v.as_slice()) {
-            ([px, py, _], [vx, vy, _]) => {
-                let position = Vector2::new(*px, *py);
-                let velocity = Vector2::new(*vx, *vy);
+            ([px, py, pz], [vx, vy, vz]) => {
+                let position = Vector3 {
+                    x: *px as i128,
+                    y: *py as i128,
+                    z: *pz as i128,
+                };
+                let velocity = Vector3 {
+                    x: *vx as i128,
+                    y: *vy as i128,
+                    z: *vz as i128,
+                };
                 Hail { position, velocity }
             }
             _ => panic!("Invalid position"),
@@ -44,8 +136,8 @@ impl Hail {
 }
 
 pub fn solve(input: &str) -> SolutionPair {
-    const MIN: f64 = 200000000000000.0;
-    const MAX: f64 = 400000000000000.0;
+    const MIN: f64 = 200_000_000_000_000.0;
+    const MAX: f64 = 400_000_000_000_000.0;
     let hailstones = input.lines().map(Hail::parse).collect::<Vec<_>>();
     (p1(&hailstones, MIN, MAX), p2(&hailstones))
 }
@@ -70,7 +162,37 @@ fn p1(hailstones: &[Hail], min: f64, max: f64) -> Solution {
 }
 
 fn p2(hailstones: &[Hail]) -> Solution {
-    Solution::Usize(47)
+    // take 3 hailstones, any 3
+    let a = hailstones[0];
+    let b = hailstones[1];
+    let c = hailstones[2];
+
+    let (p0, v0) = (a.position, a.velocity);
+    let (p1, v1) = (b.position, b.velocity);
+    let (p2, v2) = (c.position, c.velocity);
+
+    // compute relative positions and velocities
+    // this makes calculations go through origin
+    let p3 = p1 - p0;
+    let p4 = p2 - p0;
+    let v3 = v1 - v0;
+    let v4 = v2 - v0;
+
+    let q = v3.cross(p3).gcd();
+    let r = v4.cross(p4).gcd();
+    let direction = q.cross(r).gcd();
+
+    let t1 = (p3.y * direction.x - p3.x * direction.y) / (v3.x * direction.y - v3.y * direction.x);
+    let t2 = (p4.y * direction.x - p4.x * direction.y) / (v4.x * direction.y - v4.y * direction.x);
+    let dt = t2 - t1;
+    let st = t2 * t1;
+
+    let a = t2 * (p0 + p3).sum();
+    let b = t1 * (p0 + p4).sum();
+    let c = st * (v3 - v4).sum();
+    let answer = (a - b + c) / dt;
+
+    Solution::I128(answer)
 }
 
 fn intersection(h1: Hail, h2: Hail) -> Option<(Point, (Intersects, Intersects))> {
@@ -87,9 +209,6 @@ fn intersection(h1: Hail, h2: Hail) -> Option<(Point, (Intersects, Intersects))>
 
     let x = (slope1 * x1 - slope2 * x2 + y2 - y1) / (slope1 - slope2);
     let y = (slope1 * slope2 * (x2 - x1) + slope2 * y1 - slope1 * y2) / (slope2 - slope1);
-
-    let x = (x * 1000.0).round() / 1000.0;
-    let y = (y * 1000.0).round() / 1000.0;
 
     let t1 = (x - x1) / dx1;
     let t2 = (x - x2) / dx2;
@@ -120,6 +239,6 @@ mod tests {
         let p1 = super::p1(&hailstones, 7.0, 27.0);
         let p2 = super::p2(&hailstones);
         assert_eq!(p1, Solution::Usize(2));
-        assert_eq!(p2, Solution::Usize(47));
+        assert_eq!(p2, Solution::I128(47));
     }
 }

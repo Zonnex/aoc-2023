@@ -1,72 +1,53 @@
-use std::collections::HashSet;
-
 use crate::{Solution, SolutionPair};
 
-type Scratchcard = (HashSet<u8>, Vec<u8>);
-
 pub fn solve(input: &str) -> SolutionPair {
-    let scratchcards = parse_input(input);
+    let matches = parse_input(input);
 
-    (p1(&scratchcards), p2(&scratchcards))
+    (p1(&matches), p2(&matches))
 }
 
-fn parse_input(input: &str) -> Vec<Scratchcard> {
+fn parse_input(input: &str) -> Vec<usize> {
     input
         .lines()
         .map(|line| {
             let (_, card) = line.split_once(": ").unwrap();
             let (winning_numbers, actual) = card.split_once(" | ").unwrap();
 
-            let winning_numbers = winning_numbers
-                .split_whitespace()
-                .filter_map(|n| n.parse().ok())
-                .collect::<HashSet<u8>>();
+            // hashset replacement
+            let mut wins = [false; 100];
 
-            let actual = actual
+            for number in winning_numbers
                 .split_whitespace()
-                .filter_map(|n| n.parse().ok())
-                .collect::<Vec<u8>>();
+                .filter_map(|n| n.parse::<usize>().ok())
+            {
+                wins[number] = true;
+            }
 
-            (winning_numbers, actual)
+            actual
+                .split_whitespace()
+                .filter_map(|n| n.parse::<usize>().ok())
+                .filter(|n| wins[*n])
+                .count()
         })
         .collect::<Vec<_>>()
 }
 
-fn p1(cards: &[Scratchcard]) -> Solution {
-    let answer = cards
-        .iter()
-        .map(check_scratchcard)
-        .map(|wins| if wins > 0 { 1 << (wins - 1) } else { 0 })
-        .sum();
+fn p1(matches: &[usize]) -> Solution {
+    let answer = matches.iter().map(|&n| (1 << n) >> 1).sum();
 
     Solution::Usize(answer)
 }
 
-fn check_scratchcard(card: &Scratchcard) -> usize {
-    let (winning_numbers, actual) = card;
+fn p2(matches: &Vec<usize>) -> Solution {
+    let mut copies = vec![1; matches.len()];
 
-    actual
-        .iter()
-        .filter(|n| winning_numbers.contains(n))
-        .count()
-}
-
-fn p2(input: &Vec<Scratchcard>) -> Solution {
-    let winning_numbers_count = input[0].0.len();
-    let mut repeats = vec![1; winning_numbers_count];
-    let mut total = 0;
-
-    for card in input {
-        let repeat = repeats[0];
-        repeats[0] = 1;
-        repeats.rotate_left(1);
-
-        let wins = check_scratchcard(card);
-        total += repeat;
-        for item in repeats.iter_mut().take(wins) {
-            *item += repeat;
+    for (i, &n) in matches.iter().enumerate() {
+        for j in 1..=n {
+            copies[i + j] += copies[i];
         }
     }
+
+    let total = copies.iter().sum();
 
     Solution::Usize(total)
 }

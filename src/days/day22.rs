@@ -1,6 +1,5 @@
 use std::{
-    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
-    fmt::Binary,
+    collections::{HashMap, HashSet, VecDeque},
     vec,
 };
 
@@ -8,31 +7,16 @@ use itertools::Itertools;
 
 use crate::{utils::vector_3d::Vector3, Solution, SolutionPair};
 
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 struct Brick {
     id: usize,
     from: Vector3,
     to: Vector3,
 }
 
-impl Ord for Brick {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let left = (self.from.z, self.from.x, self.from.y);
-        let right = (other.from.z, other.from.x, other.from.y);
-
-        left.cmp(&right)
-    }
-}
-
-impl PartialOrd for Brick {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 impl Brick {
     fn move_to(&mut self, height: usize) {
-        let height = height as isize;
+        let height = height as f64;
         let diff = height - self.from.z;
 
         self.from.z += diff;
@@ -50,7 +34,7 @@ struct Bricks {
 
 impl Bricks {
     fn parse(input: &str) -> Self {
-        let (mut width, mut depth, mut height) = (0, 0, 0);
+        let (mut width, mut depth, mut height) = (0.0, 0.0, 0.0);
         let mut bricks = input
             .lines()
             .map(|line| {
@@ -80,7 +64,14 @@ impl Bricks {
             })
             .collect::<Vec<_>>();
 
-        bricks.sort_by(|a, b| a.cmp(b));
+        bricks.sort_by(|a, b| {
+            a.from
+                .z
+                .partial_cmp(&b.from.z)
+                .unwrap()
+                .then(a.from.x.partial_cmp(&b.from.x).unwrap())
+                .then(a.from.y.partial_cmp(&b.from.y).unwrap())
+        });
 
         let bricks = bricks
             .into_iter()
@@ -91,17 +82,17 @@ impl Bricks {
             })
             .rev()
             .inspect(|b| {
-                width = width.max(b.from.x).max(b.to.x);
-                depth = depth.max(b.from.y).max(b.to.y);
-                height = height.max(b.from.z).max(b.to.z);
+                width = f64::max(width, b.to.x);
+                depth = f64::max(depth, b.to.y);
+                height = f64::max(height, b.to.z);
             })
             .collect();
 
         Self {
             bricks,
-            width: (width + 1) as usize,
-            depth: (depth + 1) as usize,
-            height: (height + 1) as usize,
+            width: (width + 1.0) as usize,
+            depth: (depth + 1.0) as usize,
+            height: (height + 1.0) as usize,
         }
     }
 }
@@ -127,9 +118,9 @@ impl HeightMap {
 
     fn get_height_for_brick(&self, brick: Brick) -> usize {
         let mut max_height = 0;
-        for x in brick.from.x..=brick.to.x {
-            for y in brick.from.y..=brick.to.y {
-                let height = self.get(x as usize, y as usize);
+        for x in (brick.from.x as usize)..=(brick.to.x as usize) {
+            for y in (brick.from.y as usize)..=(brick.to.y as usize) {
+                let height = self.get(x, y);
                 max_height = max_height.max(height);
             }
         }
@@ -138,13 +129,13 @@ impl HeightMap {
     }
 
     fn place_brick(&mut self, brick: Brick) {
-        for x in brick.from.x..=brick.to.x {
-            for y in brick.from.y..=brick.to.y {
-                for z in brick.from.z..=brick.to.z {
-                    let x = x as usize;
-                    let y = y as usize;
+        for x in (brick.from.x as usize)..=(brick.to.x as usize) {
+            for y in (brick.from.y as usize)..=(brick.to.y as usize) {
+                for z in (brick.from.z as usize)..=(brick.to.z as usize) {
+                    let x = x;
+                    let y = y;
 
-                    self.map[y * self.width + x] = z as usize;
+                    self.map[y * self.width + x] = z;
                 }
             }
         }
@@ -176,12 +167,12 @@ impl Tower {
         brick.move_to(height);
         self.height_map.place_brick(brick);
 
-        for x in brick.from.x..=brick.to.x {
-            for y in brick.from.y..=brick.to.y {
-                for z in brick.from.z..=brick.to.z {
-                    let x = x as usize;
-                    let y = y as usize;
-                    let z = z as usize;
+        for x in (brick.from.x as usize)..=(brick.to.x as usize) {
+            for y in (brick.from.y as usize)..=(brick.to.y as usize) {
+                for z in (brick.from.z as usize)..=(brick.to.z as usize) {
+                    let x = x;
+                    let y = y;
+                    let z = z;
 
                     debug_assert_eq!(self.tower[x][y][z], None);
 
@@ -191,12 +182,12 @@ impl Tower {
                         if id != brick.id {
                             self.dependency_map
                                 .entry(brick.id)
-                                .or_insert_with(HashSet::new)
+                                .or_default()
                                 .insert(id);
 
                             self.foundation_map
                                 .entry(id)
-                                .or_insert_with(HashSet::new)
+                                .or_default()
                                 .insert(brick.id);
                         }
                     }
@@ -267,7 +258,7 @@ fn p2(tower: &Tower, bricks: &[&Brick]) -> Solution {
     let mut results = HashMap::new();
 
     for brick in bricks.iter().rev() {
-        let count = count_chain(tower, &brick);
+        let count = count_chain(tower, brick);
         results.insert(brick.id, count);
     }
 
@@ -292,7 +283,7 @@ fn count_chain(tower: &Tower, brick: &Brick) -> usize {
             if set.iter().all(|id| fallen.contains(id)) {
                 fallen.insert(brick.id);
                 count += 1;
-                
+
                 if let Some(set) = tower.foundation_map.get(&brick.id) {
                     for id in set {
                         queue.push_back(&tower.bricks[*id]);

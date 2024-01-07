@@ -51,7 +51,6 @@ enum Entity {
 
 pub fn solve(input: &str) -> SolutionPair {
     let grid = parse_grid(input);
-    print_grid(&grid);
 
     (Solution::Usize(p1(&grid)), Solution::Usize(p2(&grid)))
 }

@@ -62,21 +62,21 @@ fn simulate(config: &HashMap<&str, (Module, Vec<&str>)>, rounds: usize) -> usize
         }
     }
 
-    println!("Conjunctions: {:?}", conjunctions);
-    println!("Flip-flops: {:?}", flip_flops);
+    // println!("Conjunctions: {:?}", conjunctions);
+    // println!("Flip-flops: {:?}", flip_flops);
 
     let mut queue = VecDeque::new();
     let (mut low, mut high) = (0, 0);
 
     let (_, dests) = config.get("broadcaster").unwrap();
-    for round in 0..rounds {
+    for _round in 0..rounds {
         low += 1; // button -> broadcaster is low pulse
         for dest in dests {
             queue.push_back(("broadcaster", dest, Pulse::Low));
         }
-        if round % 100 == 0 {
-            println!("Round {}. High: {}. Low: {}", round, high, low);
-        }
+        // if round % 100 == 0 {
+        //     println!("Round {}. High: {}. Low: {}", round, high, low);
+        // }
         while let Some((from, current, pulse)) = queue.pop_front() {
             if pulse == Pulse::High {
                 high += 1;
@@ -121,9 +121,7 @@ fn simulate(config: &HashMap<&str, (Module, Vec<&str>)>, rounds: usize) -> usize
                             let inputs = conjunctions.get_mut(current).unwrap();
         
                             // update memory
-                            *inputs.get_mut(&from).expect(
-                                format!("tried to get input for {} from {}", current, from).as_str(),
-                            ) = pulse;
+                            *inputs.get_mut(&from).unwrap_or_else(|| panic!("tried to get input for {} from {}", current, from)) = pulse;
         
                             // check if all inputs are high
                             if inputs.values().all(|p| *p == Pulse::High) {
@@ -146,7 +144,7 @@ fn simulate(config: &HashMap<&str, (Module, Vec<&str>)>, rounds: usize) -> usize
     low * high
 }
 
-fn p2(config: &HashMap<&str, (Module, Vec<&str>)>) -> Solution {
+fn p2(_config: &HashMap<&str, (Module, Vec<&str>)>) -> Solution {
     // determine when rx gets sent a low pulse
     // rx gets sent a low pulse when mg remembers all high pulses
     // mg remembers all high pulses when mg receives a low pulse from each of its inputs

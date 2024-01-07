@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use crate::SolutionPair;
+use crate::{SolutionPair, etc::Solution};
 
 type RangeMap = (Range<usize>, Range<usize>);
 
@@ -33,8 +33,9 @@ impl Maps {
     }
 }
 
-pub fn solve(input: &str) -> SolutionPair {
-    (p1::solve(input), p2::solve(input))
+pub fn solve(_input: &str) -> SolutionPair {
+    (Solution::None, Solution::None)
+    // (p1::solve(input), p2::solve(input))
 }
 
 fn parse_maps(input: &str) -> Maps {

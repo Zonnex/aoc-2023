@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 use crate::{utils::vector_2d::Vector2, Solution, SolutionPair};
 
@@ -64,7 +64,7 @@ pub fn solve(input: &str) -> SolutionPair {
         .filter(|v| **v % 2 == 1 && **v > 65)
         .count();
 
-    let n = ((26501365 - (map.width / 2)) / map.height) as usize;
+    let n = (26501365 - (map.width / 2)) / map.height;
     assert_eq!(n, 202300);
 
     let even = n * n;
@@ -85,6 +85,6 @@ mod tests {
     #[test]
     fn test_sample_input() {
         let input = include_str!("../../input/day21/test.txt");
-        let map = Map::parse(input);
+        let _map = Map::parse(input);
     }
 }

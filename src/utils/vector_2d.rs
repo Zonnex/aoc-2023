@@ -122,6 +122,13 @@ impl Vector2 {
         let y = self.y.rem_euclid(max_y as isize);
         Vector2 { x, y }
     }
+
+    pub(crate) fn cross(&self, vel_b: Vector2) -> Vector2 {
+        Vector2 {
+            x: self.y * vel_b.y - self.x * vel_b.x,
+            y: self.x * vel_b.y - self.y * vel_b.x,
+        }
+    }
 }
 
 impl TryFrom<(usize, usize)> for Vector2 {
@@ -251,8 +258,6 @@ impl std::ops::Mul<isize> for Vector2 {
     type Output = Self;
 
     fn mul(self, rhs: isize) -> Self::Output {
-        let rhs = rhs;
-
         Vector2 {
             x: self.x * rhs,
             y: self.y * rhs,
@@ -264,8 +269,6 @@ impl std::ops::Mul<f64> for Vector2 {
     type Output = (f64, f64);
 
     fn mul(self, rhs: f64) -> (f64, f64) {
-        let rhs = rhs;
-
         (self.x as f64 * rhs, self.y as f64 * rhs)
     }
 }

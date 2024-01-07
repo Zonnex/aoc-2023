@@ -1,129 +1,127 @@
-use std::cmp::Ordering;
-
 use crate::{Solution, SolutionPair};
 
-use self::camel_cards::Hand;
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy, Hash)]
+pub struct Bid(pub usize);
 
-pub mod camel_cards;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Hand([usize; 5]);
 
-#[derive(Debug, Clone)]
-struct Line(camel_cards::Hand, camel_cards::Bid);
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Part {
+    One,
+    Two,
+}
 
-struct P1Ranker<'a>(&'a Hand);
+const A: usize = 14;
+const K: usize = 13;
+const Q: usize = 12;
+const J: usize = 11;
+const T: usize = 10;
 
-impl<'a> P1Ranker<'a> {
-    pub fn five_of_a_kind(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().any(|&v| v == 5)
+impl Hand {
+    fn parse(s: &str) -> Self {
+        let mut cards = [0; 5];
+        let mut i = 0;
+        for card in s.as_bytes() {
+            cards[i] = match card {
+                b'A' => A,
+                b'K' => K,
+                b'Q' => Q,
+                b'J' => J,
+                b'T' => T,
+                b'2'..=b'9' => (card - b'0') as usize,
+                _ => unreachable!(),
+            };
+            i += 1;
+        }
+
+        Self(cards)
     }
 
-    pub fn four_of_a_kind(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().any(|&v| v == 4)
-    }
+    fn rank(self, part: Part) -> usize {
+        let Hand(cards) = self;
 
-    pub fn full_house(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().any(|&v| v == 3) && count.values().any(|&v| v == 2)
-    }
+        let cards = match part {
+            Part::One => cards,
+            Part::Two => {
+                let mut cards = cards;
+                cards.iter_mut().for_each(|c| {
+                    if *c == J {
+                        *c = 1;
+                    }
+                });
+                cards
+            }
+        };
 
-    pub fn three_of_a_kind(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().any(|&v| v == 3) && count.values().filter(|&v| *v == 1).count() == 2
-    }
+        let mut counts = [0; 15];
+        for card in cards.iter() {
+            let index = *card;
+            counts[index] += 1;
+        }
 
-    pub fn two_pair(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().filter(|&v| *v == 2).count() == 2
-    }
+        let jokers = counts[1];
+        counts[1] = 0;
+        counts.sort_unstable();
+        counts.reverse();
+        counts[0] += jokers;
 
-    pub fn one_pair(&self) -> bool {
-        let count = &self.0.card_count;
-        count.values().any(|&v| v == 2) && count.values().filter(|&v| *v == 1).count() == 3
+
+        let mut key = 0;
+
+        for f in counts.iter().take(5) {
+            key = (key << 4) | f;
+        }
+        for r in cards {
+            key = (key << 4) | r;
+        }
+
+        key
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+struct Line(Hand, Bid);
 
 pub fn solve(input: &str) -> SolutionPair {
     let lines = input
         .lines()
         .map(|line| {
             let (hand, bid) = line.split_once(' ').unwrap();
-            let hand = camel_cards::Hand::parse(hand);
-            let bid = camel_cards::Bid(bid.parse().unwrap());
+            let hand = Hand::parse(hand);
+            let bid = Bid(bid.parse().unwrap());
             Line(hand, bid)
         })
         .collect::<Vec<_>>();
 
-    (p1(p1_sorter(lines.clone())), p2(input))
+    (p1(&lines), p2(&lines))
 }
 
-fn p1_sorter(mut lines: Vec<Line>) -> Vec<Line> {
-    fn rank(hand: &Hand) -> u8 {
-        let hand = P1Ranker(hand);
-        if hand.five_of_a_kind() {
-            return 6;
-        }
-        if hand.four_of_a_kind() {
-            return 5;
-        }
-        if hand.full_house() {
-            return 4;
-        }
-        if hand.three_of_a_kind() {
-            return 3;
-        }
-        if hand.two_pair() {
-            return 2;
-        }
-        if hand.one_pair() {
-            return 1;
-        }
-        0
-    }
+fn p1(lines: &[Line]) -> Solution {
+    let result = sort(lines, Part::One);
 
-    fn compare_cards(left: &[camel_cards::Card], right: &[camel_cards::Card]) -> Ordering {
-        for (l, r) in left.iter().zip(right.iter()) {
-            let card_compare = l.value().cmp(&r.value());
-            if card_compare != Ordering::Equal {
-                return card_compare;
-            }
-        }
-        Ordering::Equal
-    }
+    Solution::Usize(result)
+}
 
-    fn compare_hands(Line(left, _): &Line, Line(right, _): &Line) -> Ordering {
-        let rank_compare = rank(left).cmp(&rank(right));
-        if rank_compare == Ordering::Equal {
-            compare_cards(&left.cards, &right.cards)
-        } else {
-            rank_compare
-        }
-    }
+fn p2(input: &[Line]) -> Solution {
+    let result = sort(input, Part::Two);
 
-    lines.sort_by(compare_hands);
+    Solution::Usize(result)
+}
+
+fn sort(lines: &[Line], part: Part) -> usize {
+    let mut lines = lines
+        .iter()
+        .map(|Line(hand, Bid(bid))| (hand.rank(part), *bid))
+        .collect::<Vec<_>>();
+
+    lines.sort_unstable();
+
     lines
-}
-
-fn p2_sorter(_lines: Vec<Line>) -> Vec<Line> {
-    todo!()
-}
-
-fn p1(input: Vec<Line>) -> Solution {
-    let winnings = input
         .iter()
         .enumerate()
-        .map(|(i, Line(_, camel_cards::Bid(bid)))| {
-            let rank = i + 1;
-            let bid = *bid as usize;
-            rank * bid
-        })
-        .sum::<usize>();
-
-    Solution::Usize(winnings)
-}
-
-fn p2(_input: &str) -> Solution {
-    Solution::U64(0)
+        .map(|(index, (_, bid))| ((index + 1) * *bid))
+        .sum()
 }
 
 #[cfg(test)]
@@ -133,8 +131,8 @@ mod tests {
     #[test]
     fn test_sample_input() {
         let input = include_str!("../../input/day07/test.txt");
-        let (p1, _p2) = super::solve(input);
+        let (p1, p2) = super::solve(input);
         assert_eq!(p1, Solution::Usize(6440));
-        // assert_eq!(p2, expected);
+        assert_eq!(p2, Solution::Usize(5905));
     }
 }
